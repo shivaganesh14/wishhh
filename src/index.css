@@ -1,0 +1,212 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Nunito:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Warm, nostalgic color palette */
+    --background: 35 45% 93%; /* Warm Beige #F5E6CC */
+    --foreground: 25 30% 20%; /* Warm dark brown */
+
+    --card: 0 0% 93%; /* Light Grey #ECECEC */
+    --card-foreground: 25 30% 20%;
+
+    --popover: 35 45% 96%;
+    --popover-foreground: 25 30% 20%;
+
+    --primary: 24 100% 74%; /* Peach #FFB07C */
+    --primary-foreground: 25 30% 15%;
+
+    --secondary: 300 30% 75%; /* Lavender #CBAACB */
+    --secondary-foreground: 25 30% 15%;
+
+    --muted: 35 30% 88%;
+    --muted-foreground: 25 15% 45%;
+
+    --accent: 43 72% 52%; /* Soft Gold #D4AF37 */
+    --accent-foreground: 25 30% 15%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 35 30% 82%;
+    --input: 35 30% 85%;
+    --ring: 43 72% 52%;
+
+    --radius: 1rem;
+
+    /* Custom colors */
+    --peach: 24 100% 74%;
+    --gold: 43 72% 52%;
+    --lavender: 300 30% 75%;
+    --sky: 197 71% 73%; /* Sky Blue #87CEEB */
+    --beige: 35 45% 93%;
+    --warm-grey: 0 0% 93%;
+
+    /* Gradients */
+    --gradient-warm: linear-gradient(135deg, hsl(35 45% 93%) 0%, hsl(35 35% 88%) 100%);
+    --gradient-peach: linear-gradient(135deg, hsl(24 100% 74%) 0%, hsl(24 100% 68%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(43 72% 58%) 0%, hsl(43 72% 48%) 100%);
+    --gradient-lavender: linear-gradient(135deg, hsl(300 30% 80%) 0%, hsl(300 30% 70%) 100%);
+
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -4px hsl(35 30% 60% / 0.25);
+    --shadow-glow: 0 8px 32px -8px hsl(24 100% 74% / 0.35);
+    --shadow-gold: 0 4px 16px -4px hsl(43 72% 52% / 0.35);
+
+    --sidebar-background: 35 45% 95%;
+    --sidebar-foreground: 25 30% 20%;
+    --sidebar-primary: 24 100% 74%;
+    --sidebar-primary-foreground: 25 30% 15%;
+    --sidebar-accent: 300 30% 75%;
+    --sidebar-accent-foreground: 25 30% 15%;
+    --sidebar-border: 35 30% 82%;
+    --sidebar-ring: 43 72% 52%;
+  }
+
+  .dark {
+    --background: 25 30% 10%;
+    --foreground: 35 30% 92%;
+
+    --card: 25 25% 14%;
+    --card-foreground: 35 30% 92%;
+
+    --popover: 25 25% 12%;
+    --popover-foreground: 35 30% 92%;
+
+    --primary: 24 100% 74%;
+    --primary-foreground: 25 30% 10%;
+
+    --secondary: 300 20% 35%;
+    --secondary-foreground: 35 30% 92%;
+
+    --muted: 25 20% 20%;
+    --muted-foreground: 35 20% 60%;
+
+    --accent: 43 72% 52%;
+    --accent-foreground: 25 30% 10%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 25 20% 22%;
+    --input: 25 20% 22%;
+    --ring: 43 72% 52%;
+
+    --sidebar-background: 25 30% 8%;
+    --sidebar-foreground: 35 30% 92%;
+    --sidebar-primary: 24 100% 74%;
+    --sidebar-primary-foreground: 25 30% 10%;
+    --sidebar-accent: 300 20% 35%;
+    --sidebar-accent-foreground: 35 30% 92%;
+    --sidebar-border: 25 20% 22%;
+    --sidebar-ring: 43 72% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Nunito', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+    @apply font-bold tracking-tight;
+  }
+
+  .font-script {
+    font-family: 'Dancing Script', cursive;
+  }
+
+  .font-display {
+    font-family: 'Playfair Display', serif;
+  }
+
+  .font-body {
+    font-family: 'Nunito', sans-serif;
+  }
+
+  .font-label {
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-sm border border-border/50 shadow-[var(--shadow-soft)];
+  }
+
+  .gradient-peach {
+    background: var(--gradient-peach);
+  }
+
+  .gradient-gold {
+    background: var(--gradient-gold);
+  }
+
+  .gradient-lavender {
+    background: var(--gradient-lavender);
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .shadow-gold {
+    box-shadow: var(--shadow-gold);
+  }
+
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-accent to-amber-500 bg-clip-text text-transparent;
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  .animate-reveal {
+    animation: reveal 1.5s ease-out forwards;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes glow {
+    from {
+      box-shadow: 0 0 20px hsl(43 72% 52% / 0.3);
+    }
+    to {
+      box-shadow: 0 0 40px hsl(43 72% 52% / 0.5);
+    }
+  }
+
+  @keyframes reveal {
+    0% {
+      opacity: 0;
+      transform: scale(0.9) translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+}

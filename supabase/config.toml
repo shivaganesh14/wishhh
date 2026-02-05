@@ -1,0 +1,13 @@
+project_id = "xydlsavukbgpeqoazzle"
+
+[functions.send-capsule-notification]
+verify_jwt = false
+
+[functions.get-signed-media-url]
+verify_jwt = false
+
+[functions.hash-capsule-password]
+verify_jwt = false
+
+[functions.verify-capsule-password]
+verify_jwt = false
