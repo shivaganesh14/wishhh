@@ -118,10 +118,17 @@ export default function CreateCapsule() {
       return;
     }
 
-    // Combine date and time
+    // Build exact unlock instant from calendar date + time input (user's local time).
+    // Extract date parts directly from the calendar Date to avoid any timezone conversion issues.
     const [hours, minutes] = unlockTime.split(':').map(Number);
-    const unlockAt = new Date(unlockDate!);
-    unlockAt.setHours(hours, minutes, 0, 0);
+    // Ensure we're working with the calendar's local date representation
+    const calDate = new Date(unlockDate!);
+    // Get local date components (not UTC) to preserve the exact day/month/year the user selected
+    const y = calDate.getFullYear();
+    const m = calDate.getMonth(); // 0-indexed: 0=Jan, 11=Dec
+    const d = calDate.getDate();
+    // Build new Date using local timezone (no UTC conversion until toISOString())
+    const unlockAt = new Date(y, m, d, hours, minutes, 0, 0);
 
     if (unlockAt <= new Date()) {
       toast({
@@ -346,7 +353,13 @@ export default function CreateCapsule() {
                         mode="single"
                         selected={unlockDate}
                         onSelect={setUnlockDate}
-                        disabled={(date) => date < new Date()}
+                        disabled={(date) => {
+                          const d = new Date(date);
+                          d.setHours(0, 0, 0, 0);
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          return d < today;
+                        }}
                         initialFocus
                       />
                     </PopoverContent>

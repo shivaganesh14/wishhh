@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Lock, Unlock, Clock, Gift, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatUnlockDateTime, parseCapsuleTimestamp } from '@/lib/dates';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
@@ -26,7 +26,7 @@ export function CapsuleCard({
   onView,
   onDelete
 }: CapsuleCardProps) {
-  const unlockDate = new Date(unlockAt);
+  const unlockDate = parseCapsuleTimestamp(unlockAt);
   const now = new Date();
   const isReady = now >= unlockDate;
 
@@ -75,7 +75,7 @@ export function CapsuleCard({
             <Clock className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
             <span className="truncate">
               {isReady ? 'Unlocked ' : 'Unlocks '}
-              {format(unlockDate, 'MMM d, yyyy \'at\' h:mm a')}
+              {formatUnlockDateTime(unlockAt)}
             </span>
           </div>
           

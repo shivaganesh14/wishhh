@@ -60,10 +60,10 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     // Verify authorization - require either a valid cron secret or authenticated user
     const authHeader = req.headers.get('Authorization');
-    const cronSecretHeader = req.headers.get('X-Cron-Secret');
-    
+    const cronSecretHeader = (req.headers.get('X-Cron-Secret') ?? req.headers.get('x-cron-secret'))?.trim();
+
     // Check cron secret for scheduled invocations
-    if (CRON_SECRET && cronSecretHeader === CRON_SECRET) {
+    if (CRON_SECRET && cronSecretHeader && cronSecretHeader === CRON_SECRET.trim()) {
       console.log("Authenticated via cron secret");
     } else if (authHeader?.startsWith('Bearer ')) {
       // Verify JWT for manual invocations

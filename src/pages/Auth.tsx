@@ -43,7 +43,7 @@ export default function Auth() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resetEmailSent, setResetEmailSent] = useState(false);
   
-  const { signIn, signUp, user, resetPassword, updatePassword } = useAuth();
+  const { signIn, signUp, user, loading: authLoading, resetPassword, updatePassword, clearRecoveryHash } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -65,6 +65,13 @@ export default function Auth() {
       navigate('/dashboard');
     }
   }, [user, mode, navigate]);
+
+  // When user lands from reset email link, session is in the URL hash. Clear it for security once we have the session.
+  useEffect(() => {
+    if (mode === 'reset' && user) {
+      clearRecoveryHash();
+    }
+  }, [mode, user, clearRecoveryHash]);
 
   const validateForm = () => {
     try {
@@ -229,6 +236,78 @@ export default function Auth() {
         return <Gift className="w-8 h-8 text-accent" />;
     }
   };
+
+  // Reset mode: wait for session from email link (hash is parsed asynchronously)
+  if (mode === 'reset' && authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <div className="p-4">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/" className="flex items-center gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              Back to home
+            </Link>
+          </Button>
+        </div>
+        <div className="flex-1 flex items-center justify-center px-4">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-10 h-10 animate-spin text-accent" />
+            <p className="text-muted-foreground font-body">Verifying your reset link...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Reset mode: no session after loading = invalid or expired link
+  if (mode === 'reset' && !authLoading && !user) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <div className="p-4">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/" className="flex items-center gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              Back to home
+            </Link>
+          </Button>
+        </div>
+        <div className="flex-1 flex items-center justify-center px-4 pb-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full max-w-md text-center"
+          >
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-destructive/20 mb-4">
+              <KeyRound className="w-8 h-8 text-destructive" />
+            </div>
+            <h1 className="text-3xl font-display font-bold text-foreground mb-2">
+              Invalid or Expired Link
+            </h1>
+            <p className="text-muted-foreground font-body mb-6">
+              This password reset link is invalid or has expired. Request a new one below.
+            </p>
+            <Button
+              variant="peach"
+              size="lg"
+              className="w-full"
+              onClick={() => setMode('forgot')}
+            >
+              Request New Reset Link
+            </Button>
+            <p className="mt-6 text-sm text-muted-foreground font-body">
+              <button
+                type="button"
+                onClick={() => setMode('login')}
+                className="text-accent hover:underline font-medium"
+              >
+                Back to Sign In
+              </button>
+            </p>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   // Reset email sent confirmation screen
   if (mode === 'forgot' && resetEmailSent) {

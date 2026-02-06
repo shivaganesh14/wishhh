@@ -109,10 +109,10 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get stored hash
+    // Get stored hash (and capsule data for successful verification)
     const { data: capsule, error: fetchError } = await supabase
       .from("capsules")
-      .select("password_hash, unlock_at")
+      .select("title, content, media_url, media_type, password_hash, unlock_at, open_once, is_opened, created_at")
       .eq("share_token", shareToken)
       .single();
 
@@ -133,12 +133,36 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Enforce open_once at the server: if already opened, deny
+    if (capsule.open_once && capsule.is_opened) {
+      return new Response(
+        JSON.stringify({ isValid: false, error: "Capsule can only be opened once" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const isValid = await verifyPassword(password, capsule.password_hash);
     
     console.log("Password verification completed for capsule, valid:", isValid);
 
     return new Response(
-      JSON.stringify({ isValid }),
+      JSON.stringify({
+        isValid,
+        // Only return capsule data on success
+        capsule: isValid
+          ? {
+              title: capsule.title,
+              content: capsule.content,
+              media_url: capsule.media_url,
+              media_type: capsule.media_type,
+              unlock_at: capsule.unlock_at,
+              created_at: capsule.created_at,
+              open_once: capsule.open_once,
+              is_opened: capsule.is_opened,
+              has_password: true,
+            }
+          : undefined,
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {

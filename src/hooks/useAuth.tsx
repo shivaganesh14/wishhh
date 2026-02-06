@@ -11,6 +11,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
   updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
+  clearRecoveryHash: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -108,11 +109,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
+    // Redirect URL must be allowlisted in Supabase: Auth → URL Configuration → Redirect URLs
     const redirectUrl = `${window.location.origin}/auth?mode=reset`;
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
     });
     return { error };
+  };
+
+  /** Call after recovery session is established to remove tokens from URL (security). */
+  const clearRecoveryHash = () => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hashParams = new URLSearchParams(window.location.hash.slice(1));
+      if (hashParams.get('type') === 'recovery') {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    }
   };
 
   const updatePassword = async (newPassword: string) => {
@@ -123,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, resetPassword, updatePassword }}>
+    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, resetPassword, updatePassword, clearRecoveryHash }}>
       {children}
     </AuthContext.Provider>
   );

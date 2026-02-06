@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Gift, Lock, ArrowLeft, QrCode, Loader2, Eye, Copy, Check, Calendar, Clock, ShieldAlert } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { format } from 'date-fns';
+import { formatCreatedDate, formatUnlockDate, formatUnlockTime, parseCapsuleTimestamp } from '@/lib/dates';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -76,9 +76,15 @@ function ViewCapsule() {
       setCapsule(capsuleData);
       
       // Check if unlock time has passed using server time
-      const unlockDate = new Date(capsuleData.unlock_at);
+      const unlockDate = parseCapsuleTimestamp(capsuleData.unlock_at);
       const now = new Date();
       setIsReady(now >= unlockDate);
+      
+      // If open_once is enabled and already opened, don't allow viewing again
+      if (capsuleData.open_once && capsuleData.is_opened) {
+        setLoading(false);
+        return; // Will show "already opened" message below
+      }
       
       // If already opened before (without password), show directly
       if (capsuleData.is_opened && !capsuleData.has_password) {
@@ -121,6 +127,10 @@ function ViewCapsule() {
       
       if (data?.isValid) {
         setPasswordError(false);
+        // If edge function returned capsule data (content/media), merge it into state
+        if (data?.capsule && capsule) {
+          setCapsule({ ...capsule, ...data.capsule });
+        }
         revealCapsule();
       } else {
         setPasswordError(true);
@@ -154,6 +164,16 @@ function ViewCapsule() {
   };
 
   const revealCapsule = async () => {
+    // Prevent revealing if open_once and already opened
+    if (capsule?.open_once && capsule.is_opened) {
+      toast({
+        variant: 'destructive',
+        title: 'Already Opened',
+        description: 'This capsule can only be opened once and has already been viewed.',
+      });
+      return;
+    }
+    
     setIsRevealed(true);
     
     // Fetch signed media URL for private bucket
@@ -161,9 +181,16 @@ function ViewCapsule() {
     
     if (capsule && !capsule.is_opened && shareToken) {
       // Mark as opened using the secure RPC function
-      await supabase.rpc('mark_capsule_opened', {
+      const { error } = await supabase.rpc('mark_capsule_opened', {
         p_share_token: shareToken
       });
+      
+      if (error) {
+        console.error('Error marking capsule as opened:', error);
+      } else {
+        // Update local state to reflect it's now opened
+        setCapsule({ ...capsule, is_opened: true });
+      }
     }
   };
 
@@ -236,6 +263,30 @@ function ViewCapsule() {
     );
   }
 
+  // Open once: if already opened, show message
+  if (capsule.open_once && capsule.is_opened) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-8 sm:p-12 rounded-xl sm:rounded-2xl text-center max-w-md w-full"
+        >
+          <Lock className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 sm:mb-6 text-muted-foreground/50" />
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground mb-3 sm:mb-4">
+            Already Opened
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground font-body mb-4 sm:mb-6">
+            This capsule was set to open only once and has already been viewed. The memory has been sealed forever.
+          </p>
+          <Button variant="peach" asChild className="w-full sm:w-auto">
+            <Link to="/">Go Home</Link>
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
+
   // Locked state - countdown
   if (!isReady) {
     return (
@@ -264,16 +315,16 @@ function ViewCapsule() {
           <div className="flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground mb-6 sm:mb-8 font-label">
             <div className="flex items-center gap-1">
               <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span>Opens {format(new Date(capsule.unlock_at), 'MMM d, yyyy')}</span>
+              <span>Opens {formatUnlockDate(capsule.unlock_at)}</span>
             </div>
             <div className="flex items-center gap-1">
               <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span>{format(new Date(capsule.unlock_at), 'h:mm a')}</span>
+              <span>{formatUnlockTime(capsule.unlock_at)}</span>
             </div>
           </div>
 
           <CountdownTimer 
-            unlockAt={new Date(capsule.unlock_at)} 
+            unlockAt={parseCapsuleTimestamp(capsule.unlock_at)} 
             onUnlock={handleUnlock}
           />
 
@@ -522,7 +573,7 @@ function ViewCapsule() {
                 className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-border/50 text-center"
               >
                 <p className="text-xs sm:text-sm text-muted-foreground font-label">
-                  Created on {format(new Date(capsule.created_at), 'MMMM d, yyyy')}
+                  Created on {formatCreatedDate(capsule.created_at)}
                 </p>
               </motion.div>
             </motion.div>
